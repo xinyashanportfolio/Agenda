@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MY AGENDA — Sticky + To-Do Combo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #fceaff, #dee8ff);
+    }
+
+    h1 {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.6rem;
+      color: #7b5faa;
+      background: rgba(255,255,255,0.6);
+      padding: 10px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .board {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      cursor: default;
+    }
+
+    .note {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      background-color: #fff9c4;
+      overflow: hidden;
+      resize: both;
+      min-width: 150px;
+      min-height: 150px;
+      z-index: 500;
+    }
+
+    .note textarea {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1em;
+      resize: none;
+      outline: none;
+      color: #4b3a60;
+    }
+
+    .note.pink { background-color: #ffd6ec; }
+    .note.blue { background-color: #e0f0ff; }
+    .note.green { background-color: #d9f8e2; }
+    .note.purple { background-color: #e6d4ff; }
+
+    #todo-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      padding: 30px 25px;
+      width: 350px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+      z-index: 100;
+      text-align: center;
+    }
+
+    #todo-container h2 {
+      background: linear-gradient(to right, #d16ba5, #86a8e7, #5ffbf1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 1.4em;
+      margin-bottom: 20px;
+    }
+
+    #input-box {
+      width: 65%;
+      padding: 10px 14px;
+      font-size: 1em;
+      border-radius: 10px;
+      border: 1px solid #e6d3ff;
+      background: #fff0fa;
+      outline: none;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin-left: 8px;
+      font-size: 1em;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #cbb3ff, #ffb8d1);
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #9e78f8, #ff8cb3);
+      transform: translateY(-1px);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    li {
+      background: rgba(255, 255, 255, 0.9);
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #e3d2ff;
+      font-size: 1em;
+      transition: transform 0.2s;
+    }
+
+    .edit-btn, .delete-btn {
+      float: right;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-left: 10px;
+      color: #ff6fa1;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    .counter-container {
+      margin-top: 15px;
+      font-size: 0.9em;
+      color: #5f4b7c;
+    }
+  </style>
+</head>
+<body>
+  <h1>MY AGENDA — Double-click to create a sticky note ✍️</h1>
+
+  <!-- Stickies + To-Do -->
+  <div class="board" id="board">
+    <div id="todo-container">
+      <h2>To-Do List</h2>
+      <div id="todo-form">
+        <input type="text" id="input-box" placeholder="Add task..." />
+        <button onclick="addTask()">Add</button>
+      </div>
+      <ul id="list-container"></ul>
+      <div class="counter-container">
+        ✅ Done: <span id="completed-counter">0</span> |
+        📝 Left: <span id="uncompleted-counter">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const board = document.getElementById('board');
+    const colors = ['pink', 'blue', 'green', 'purple'];
+
+    board.addEventListener('dblclick', (e) => {
+      if (e.target.closest('#todo-container')) return;
+
+      const note = document.createElement('div');
+      note.classList.add('note', colors[Math.floor(Math.random() * colors.length)]);
+      note.style.left = `${e.clientX - 100}px`;
+      note.style.top = `${e.clientY - 100}px`;
+
+      const textarea = document.createElement('textarea');
+      textarea.placeholder = "Type here...";
+      note.appendChild(textarea);
+      board.appendChild(note);
+
+      makeDraggable(note);
+    });
+
+    function makeDraggable(el) {
+      let offsetX, offsetY, isDragging = false;
+
+      el.addEventListener('mousedown', (e) => {
+        if (e.target.tagName.toLowerCase() === 'textarea') return;
+        isDragging = true;
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+        el.style.zIndex = 999;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        el.style.left = `${e.clientX - offsetX}px`;
+        el.style.top = `${e.clientY - offsetY}px`;
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        el.style.zIndex = 500;
+      });
+    }
+
+    // To-Do Logic
+    const inputBox = document.getElementById("input-box");
+    const listContainer = document.getElementById("list-container");
+    const completedCounter = document.getElementById("completed-counter");
+    const uncompletedCounter = document.getElementById("uncompleted-counter");
+
+    function updateCounters() {
+      const completed = document.querySelectorAll(".completed").length;
+      const uncompleted = document.querySelectorAll("li:not(.completed)").length;
+      completedCounter.textContent = completed;
+      uncompletedCounter.textContent = uncompleted;
+    }
+
+    function addTask() {
+      const task = inputBox.value.trim();
+      if (!task) {
+        alert("Please write down a task");
+        return;
+      }
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <label>
+          <input type="checkbox">
+          <span>${task}</span>
+        </label>
+        <span class="edit-btn">Edit</span>
+        <span class="delete-btn">Delete</span>
+      `;
+
+      const checkbox = li.querySelector("input");
+      const editBtn = li.querySelector(".edit-btn");
+      const taskSpan = li.querySelector("span");
+      const deleteBtn = li.querySelector(".delete-btn");
+
+      checkbox.addEventListener("click", function () {
+        li.classList.toggle("completed", checkbox.checked);
+        updateCounters();
+      });
+
+      editBtn.addEventListener("click", function () {
+        const update = prompt("Edit task:", taskSpan.textContent);
+        if (update !== null) {
+          taskSpan.textContent = update;
+          li.classList.remove("completed");
+          checkbox.checked = false;
+          updateCounters();
+        }
+      });
+
+      deleteBtn.addEventListener("click", function () {
+        if (confirm("Delete this task?")) {
+          li.remove();
+          updateCounters();
+        }
+      });
+
+      listContainer.appendChild(li);
+      inputBox.value = "";
+      updateCounters();
+    }
+  </script>
+</body>
+</html>
